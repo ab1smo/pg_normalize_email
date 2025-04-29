@@ -1,0 +1,3 @@
+default_version = '1.0'
+comment = 'A PostgreSQL extension for normalizing emails'
+relocatable = true
