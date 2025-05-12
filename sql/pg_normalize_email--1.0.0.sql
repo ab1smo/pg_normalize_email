@@ -36,19 +36,18 @@ BEGIN
   normalized_username := username;
   normalized_domain   := domain;
 
-
   IF domain = 'googlemail.com' THEN
     normalized_domain := 'gmail.com';
   ELSIF domain = 'yandex.ru' THEN
     normalized_domain := 'ya.ru';
   END IF;
 
-  IF domain IN ('gmail.com', 'live.com') THEN
+  IF normalized_domain IN ('gmail.com', 'live.com') THEN
     normalized_username := regexp_replace(
       normalized_username,
       '\.|(\+.*)', '', 'g'
     );
-  ELSIF domain IN ('ya.ru', 'hotmail.com', 'outlook.com') THEN
+  ELSIF normalized_domain IN ('ya.ru', 'hotmail.com', 'outlook.com') THEN
     normalized_username := regexp_replace(
       normalized_username,
       '\+.*', '', 'g'

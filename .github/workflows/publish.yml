@@ -1,0 +1,126 @@
+name: Publish
+permissions:
+  contents: write
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  bump_version:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest tag
+        id: tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: tags } = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 1
+            });
+
+            if (tags.length === 0) {
+              core.setOutput("last_tag", "v1.0.0");
+
+              return;
+            }
+
+            core.setOutput("last_tag", tags[0].name);
+
+      - name: Calculate next version
+        id: bump
+        run: |
+          raw_version="${{ steps.tag.outputs.last_tag }}"
+          version="${raw_version#v}"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_patch=$((patch + 1))
+          new_version="v$major.$minor.$new_patch"
+          clean_version="$major.$minor.$new_patch"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "clean_version=$clean_version" >> $GITHUB_OUTPUT
+
+      - name: Get extension name from repo
+        id: extname
+        run: |
+          repo_name=$(basename $GITHUB_REPOSITORY)
+          echo "name=$repo_name" >> $GITHUB_OUTPUT
+
+      - name: Update version in control and SQL
+        run: |
+          extname=${{ steps.extname.outputs.name }}
+          ver=${{ steps.bump.outputs.clean_version }}
+          prev=${{ steps.tag.outputs.last_tag }}
+          prev_ver="${prev#v}"
+
+          jq --arg v "$ver" '
+          .version = $v |
+          .provides.pg_normalize_email.version = $v
+          ' "META.json" > "META.tmp" && mv "META.tmp" "META.json"
+
+
+          sed -i "s/default_version = '.*'/default_version = '$ver'/" "$extname.control"
+          ls
+          mv sql/$extname--$prev_ver.sql sql/$extname--$ver.sql
+          ls
+
+      - name: Commit bump version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:main --follow-tags
+
+      - name: Create version tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.bump.outputs.new_version }}',
+              sha: context.sha
+            })
+
+  publish:
+    needs: bump_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Perl (for extension build)
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.38'
+
+      - name: Install PostgreSQL server dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common postgresql-server-dev-16 make gcc
+
+      - name: Build extension distribution
+        run: make dist
+
+      - name: Install pgxnclient
+        run: |
+          pip install --user pgxnclient
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Upload to PGXN
+        env:
+          PGXN_USER: ${{ secrets.PGXN_USER }}
+          PGXN_PASSWORD: ${{ secrets.PGXN_PASSWORD }}
+        run: |
+          archive=$(ls *.tar.gz | head -n1)
+
+      - name: Clean up
+        run: rm -f *.tar.gz

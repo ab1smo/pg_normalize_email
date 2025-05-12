@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS normalize_email(TEXT);
