@@ -121,6 +121,7 @@ jobs:
           PGXN_PASSWORD: ${{ secrets.PGXN_PASSWORD }}
         run: |
           archive=$(ls *.tar.gz | head -n1)
+          pgxn upload "$archive"
 
       - name: Clean up
         run: rm -f *.tar.gz
