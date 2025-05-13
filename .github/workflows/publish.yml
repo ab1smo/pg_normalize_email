@@ -110,18 +110,33 @@ jobs:
       - name: Build extension distribution
         run: make dist
 
-      - name: Install pgxnclient
-        run: |
-          pip install --user pgxnclient
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
       - name: Upload to PGXN
         env:
           PGXN_USER: ${{ secrets.PGXN_USER }}
           PGXN_PASSWORD: ${{ secrets.PGXN_PASSWORD }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
         run: |
-          archive=$(ls *.tar.gz | head -n1)
-          pgxn upload "$archive"
+          set -eux
+
+          TAG_NAME="${GITHUB_REF##*/}"
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          ARCHIVE_NAME="$REPO_NAME-$TAG_NAME.zip"
+
+          curl --location --output "$ARCHIVE_NAME" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/archive/refs/tags/$TAG_NAME.zip"
+
+          STATUS="$(curl \
+            --form "archive=@$ARCHIVE_NAME" \
+            --form 'submit=Release It!' \
+            --header 'X-Requested-With: XMLHttpRequest' \
+            --output /dev/stderr \
+            --user "${PGXN_USER}:${PGXN_PASSWORD}" \
+            --write-out "%{http_code}" \
+            https://manager.pgxn.org/upload)"
+
+          test "${STATUS}" -eq "200" || exit 1
 
       - name: Clean up
-        run: rm -f *.tar.gz
+        run: rm -f *.tar.gz *.zip
