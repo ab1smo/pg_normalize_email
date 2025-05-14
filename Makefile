@@ -6,7 +6,7 @@ DOCS         = README.md
 PG_CONFIG    = pg_config
 
 DIST_ARCHIVE = $(EXTENSION)-$(EXTVERSION).tar.gz
-DIST_FILES   = $(wildcard *.control) $(wildcard sql/*.sql) README.md Makefile
+DIST_FILES   = $(wildcard *.control) $(wildcard sql/*.sql) README.md Makefile META.json
 
 dist:
 	 tar -czf $(DIST_ARCHIVE) $(DIST_FILES)
