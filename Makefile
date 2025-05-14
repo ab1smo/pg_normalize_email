@@ -9,7 +9,7 @@ DIST_ARCHIVE = $(EXTENSION)-$(EXTVERSION).tar.gz
 DIST_FILES   = $(wildcard *.control) $(wildcard sql/*.sql) README.md Makefile META.json
 
 dist:
-	 tar -czf $(DIST_ARCHIVE) $(DIST_FILES)
+	 zip -r $(DIST_ARCHIVE) $(DIST_FILES)
 
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
