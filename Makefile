@@ -5,7 +5,7 @@ DATA         = $(wildcard sql/*--*.sql)
 DOCS         = README.md
 PG_CONFIG    = pg_config
 
-DIST_ARCHIVE = $(EXTENSION)-$(EXTVERSION).tar.gz
+DIST_ARCHIVE = $(EXTENSION)-$(EXTVERSION).zip
 DIST_FILES   = $(wildcard *.control) $(wildcard sql/*.sql) README.md Makefile META.json
 
 dist:
