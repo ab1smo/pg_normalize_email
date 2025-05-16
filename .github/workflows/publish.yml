@@ -12,6 +12,9 @@ jobs:
   bump_version:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
     runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.extname.outputs.name }}
+      new_version: ${{ steps.bump.outputs.clean_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -123,7 +126,7 @@ jobs:
 
           TAG_NAME="${GITHUB_REF##*/}"
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
-          ARCHIVE_NAME="$REPO_NAME-$TAG_NAME.zip"
+          ARCHIVE_NAME="${{ needs.bump_version.outputs.name }}-${{ needs.bump_version.outputs.new_version }}.zip"
 
           curl --location --output "$ARCHIVE_NAME" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/archive/refs/tags/$TAG_NAME.zip"
 
@@ -139,4 +142,4 @@ jobs:
           test "${STATUS}" -eq "200" || exit 1
 
       - name: Clean up
-        run: rm -f *.tar.gz *.zip
+        run: rm -f *.zip
