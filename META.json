@@ -2,13 +2,13 @@
   "name": "pg_normalize_email",
   "abstract": "Normalize email addresses in PostgreSQL",
   "description": "A PostgreSQL extension for normalizing emails.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "maintainer": "Abismo <abinmnd@gmail.com>",
   "license": "postgresql",
   "provides": {
     "pg_normalize_email": {
       "file": "pg_normalize_email.control",
-      "version": "1.0.6"
+      "version": "1.0.7"
     }
   },
   "resources": {
