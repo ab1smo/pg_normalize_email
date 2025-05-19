@@ -1,4 +1,4 @@
-default_version = '1.0.7'
+default_version = '1.0.8'
 comment = 'A PostgreSQL extension for normalizing emails'
 module_pathname = '$libdir/pg_normalize_email'
 relocatable = true
