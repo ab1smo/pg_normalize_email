@@ -99,6 +99,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: refs/heads/main
 
       - name: Set up Perl (for extension build)
         uses: shogo82148/actions-setup-perl@v1
@@ -123,12 +126,7 @@ jobs:
           GITHUB_SERVER_URL: ${{ github.server_url }}
         run: |
           set -eux
-
-          TAG_NAME="${GITHUB_REF##*/}"
-          REPO_NAME="${GITHUB_REPOSITORY##*/}"
           ARCHIVE_NAME="${{ needs.bump_version.outputs.name }}-${{ needs.bump_version.outputs.new_version }}.zip"
-
-          curl --location --output "$ARCHIVE_NAME" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/archive/refs/tags/$TAG_NAME.zip"
 
           STATUS="$(curl \
             --form "archive=@$ARCHIVE_NAME" \
