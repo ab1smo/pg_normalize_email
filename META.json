@@ -25,14 +25,13 @@
   "prereqs": {
     "runtime": {
       "requires": {
-        "PostgreSQL": ">=12.0"
+        "PostgreSQL": "12.0.0"
       }
     }
   },
-  "tags": [
-    "email",
-    "normalization",
-    "postgresql",
-    "extension"
-  ]
+  "meta-spec": {
+    "url": "http://pgxn.org/meta/spec.txt",
+    "version": "1.0.0"
+  },
+  "tags": ["email", "normalization", "postgresql", "extension"]
 }
